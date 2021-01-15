@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="../Scripts/ajaxCallsWithKey.js"></script>
+    <script src="../Scripts/jquery-3.4.1.min.js"></script>
+    <title>Campaign</title>
+
+    <script>
+        $(document).ready(function () {
+            console.log("ready!");
+            getAllRest();
+        });
+
+        function getStatus() {
+            ajaxCall("GET", "../api/Campaigns/status", "", getSuccessST, getErrorST)
+        }
+        function getSuccessST(data) {
+            console.log(data);
+        }
+        function getErrorST(err) {
+            console.log(err.responseText)
+        }
+
+        function func1() {
+            let _investment = $("#investmentTB").val();
+            _id = $("#allRest option:selected").val();
+            if (_investment == 0 && _id != 0)
+                alert("You did not enter an initial investment amount!");
+            else if (_investment != 0 && _id == 0)
+                alert("You did not select a restaurant!");
+            else if (_investment == 0 && _id == 0)
+                alert("You did not enter any value!");
+            else {
+                getAllCamp(); //checked if id already exist?
+
+                campaign = {
+                    Id: _id,
+                    Investment: _investment,
+                    Income: 0,
+                    View: 0,
+                    Knock: 0,
+                    Status: 1
+                }
+                console.log(JSON.stringify(campaign));
+                ajaxCall("POST", "../api/Campaigns", JSON.stringify(campaign), postSuccess, postError);
+            }
+        }
+        function postSuccess(data) {
+            alert("Succeed to add to Database!");
+        }
+        function postError(err) {
+            alert(err.responseJSON);
+        }
+
+        function getAllCamp() {
+            ajaxCall("GET", "../api/Campaigns/camp", "", getSuccessCM, getErrorCM);
+        }
+        function getSuccessCM(data) {
+            console.log(data);
+            var d = data;
+            checkIdExists(d);
+        }
+        function getErrorCM(err) {
+            console.log(err);
+        }
+        function checkIdExists(d) {
+            for (var i = 0; i < d.length; i++) {
+                if (d[i].Id == _id && d[i].Status == 1) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function getAllRest() {
+            ajaxCall("GET", "../api/Campaigns", "", getSuccessB, getErrorB);
+        }
+        function getSuccessB(data) {
+            console.log(data);
+            var d = data;
+            renderAll(d);
+        }
+        function getErrorB(err) {
+            console.log(err);
+        }
+        function renderAll(d) {
+            $("#ph1").html("");
+            let str = "<label for='sel1'>Select Restaurant:</label>";
+            str += "<select id='allRest'>";
+            str += "<option value='0'>select restaurant</option>";
+            for (var i = 0; i < d.length; i++) {
+                str += "<option value='" + d[i].Id + "'>" + d[i].Name + "</option>";
+            }
+            str += "</select>"
+            $("#ph1").append(str)
+        }
+    </script>
+
+
+</head>
+<body>
+    <div id="ph1"></div>
+    <br />
+    <table>
+        <tr>
+            <td>
+                <input type="number" id="investmentTB" placeholder="Enter your investment" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button type="button" id="investmentBTN" onclick="func1()">sent initial investment</button>
+            </td>
+        </tr>
+    </table>
+    <br />
+    <button type="button" id="changeStatusBTN" onclick="getStatus()">Refresh Campaigns Status</button>
+</body>
+</html>
